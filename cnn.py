@@ -17,6 +17,13 @@ def build_model():
                             input_shape = (64, 64, 3)))
     
     model.add(MaxPooling2D(strides = 2, pool_size = 2))
+    model.add(Convolution2D(filters = 32,
+                        kernel_size = 3,
+                        strides = 1,
+                        padding = 'same',
+                        activation = 'relu'))
+                        
+    model.add(MaxPooling2D(strides = 2, pool_size = 2))
     model.add(Flatten())
     
     model.add(Dense(units = 128, activation = 'relu'))
