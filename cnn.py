@@ -35,6 +35,7 @@ def build_model():
 
 #CREATING TEST SET AND TRAINING SET
 from keras.preprocessing.image import ImageDataGenerator
+batch_size = 25
 
 train_datagen = ImageDataGenerator(rescale = 1/255,
                                    rotation_range = 0.2,
@@ -44,17 +45,23 @@ train_datagen = ImageDataGenerator(rescale = 1/255,
 test_datagen = ImageDataGenerator(rescale = 1/255)
 
 train_dataset = train_datagen.flow_from_directory('dataset/training_set',
-                                                  batch_size = 25,
+                                                  batch_size = batch_size,
                                                   class_mode = 'binary',
                                                   target_size = (64,64))
 
 test_dataset = test_datagen.flow_from_directory('dataset/test_set',
-                                                  batch_size = 25,
+                                                  batch_size = batch_size,
                                                   class_mode = 'binary',
                                                   target_size = (64,64))
 build_model().fit_generator(train_dataset,
-                            steps_per_epoch = 8000,
-                            epochs = 25)
+                            steps_per_epoch = 8000/batch_size,
+                            epochs = 25,
+                            validation_data = test_dataset,
+                            validation_steps = 2000/batch_size,
+                            workers = 32,
+                            max_q_size = 16)
+
+build_model().fit_generator(test_dataset, steps_per_epoch = 2000, epochs = 1)
 
 #TESTING ON SINGLE IMAGE
 from keras.preprocessing import image
