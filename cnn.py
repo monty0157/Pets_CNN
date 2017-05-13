@@ -52,12 +52,15 @@ test_dataset = test_datagen.flow_from_directory('dataset/test_set',
                                                   batch_size = 25,
                                                   class_mode = 'binary',
                                                   target_size = (64,64))
-
 build_model().fit_generator(train_dataset,
-                            samples_per_epoch = 8000,
-                            nb_epoch = 1,
-                            validation_data = test_dataset,
-                            nb_val_samples = 2000)
+                            steps_per_epoch = 8000,
+                            epochs = 25)
 
-build_model().predict('dataset/single_prediction/cat_or_dog_1.jpg')
-build_model().predict('dataset/single_prediction/cat_or_dog_2.jpg')
+#TESTING ON SINGLE IMAGE
+from keras.preprocessing import image
+image_open = image.load_img('dataset/single_prediction/cat_or_dog_1.jpg', target_size=(64,64))
+image_array = np.asarray(image_open, dtype="uint8")
+image_array = np.expand_dims(image_array, axis = 0)
+
+result = build_model().predict(image_array)
+class_index = train_dataset.class_indices
