@@ -15,19 +15,23 @@ def grid_search_helper(target_size):
     for file in cats_list_train:
         img = image.load_img(cats_path_train + file, target_size = target_size)
         img = np.asarray(img)
+
+        #RESCALE IMAGE
+        img = img/255
         images_list.append(img)
 
-        #ADD FILE NAME AS LABEL BY REMOVING INDEX AND FILE EXTENSION
-        label = file.split(".")[0]
-        labels_list.append(label)
+        #ADD AS CLASS 0
+        labels_list.append(0)
     for file in dogs_list_train:
         img = image.load_img(dogs_path_train + file, target_size = target_size)
         img = np.asarray(img)
+
+        #RESCALE IMAGE
+        img = img/255
         images_list.append(img)
 
-        #ADD FILE NAME AS LABEL BY REMOVING INDEX AND FILE EXTENSION
-        label = file.split(".")[0]
-        labels_list.append(label)
+        #ADD AS CLASS 1
+        labels_list.append(1)
 
     #SHUFFLE DATA
     zip_data_for_shuffle = list(zip(images_list,labels_list))

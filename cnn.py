@@ -77,7 +77,7 @@ from keras.wrappers.scikit_learn import KerasClassifier
 grid_search = KerasClassifier(build_fn = build_model)
 
 parameters = {
-        'batch_size': [25, 32, 50],
+        'batch_size': [25, 32, 10],
         'epochs': [25, 50],
         'optimizer': ['rmsprop', 'adam'],
         'units': [25, 50, 75],
@@ -89,6 +89,7 @@ grid_search = grid_search.fit(images_list, labels_list)
 
 best_parameters = grid_search.best_params_
 best_accuracy = grid_search.best_score_
+print(best_parameters, best_accuracy)
 
 #TESTING ON SINGLE IMAGE
 from keras.preprocessing import image
