@@ -7,35 +7,37 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Convolution2D, MaxPooling2D, Flatten, Dense
 
-def build_model():
+def build_model(optimizer = 'adam', units = 128, filters = 32, kernel_size = 3):
     model = Sequential()
-    model.add(Convolution2D(filters = 32,
-                            kernel_size = 3,
+    model.add(Convolution2D(filters = filters,
+                            kernel_size = kernel_size,
                             strides = 1,
                             padding = 'same',
                             activation = 'relu',
                             input_shape = (64, 64, 3)))
-    
+
     model.add(MaxPooling2D(strides = 2, pool_size = 2))
-    model.add(Convolution2D(filters = 32,
-                        kernel_size = 3,
+    model.add(Convolution2D(filters = filters,
+                        kernel_size = kernel_size,
                         strides = 1,
                         padding = 'same',
                         activation = 'relu'))
-                        
+
     model.add(MaxPooling2D(strides = 2, pool_size = 2))
     model.add(Flatten())
-    
-    model.add(Dense(units = 128, activation = 'relu'))
+
+    model.add(Dense(units = units, activation = 'relu'))
+    model.add(Dense(units = units, activation = 'relu'))
     model.add(Dense(units = 1, activation = 'sigmoid'))
-    
-    model.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
-    
+
+    model.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['accuracy'])
+
     return model
 
-#CREATING TEST SET AND TRAINING SET
+#CREATING TEST SET AND TRAINING GENERATORS
 from keras.preprocessing.image import ImageDataGenerator
 batch_size = 25
+model = build_model()
 
 train_datagen = ImageDataGenerator(rescale = 1/255,
                                    rotation_range = 0.2,
@@ -53,16 +55,40 @@ test_dataset = test_datagen.flow_from_directory('dataset/test_set',
                                                   batch_size = batch_size,
                                                   class_mode = 'binary',
                                                   target_size = (64,64))
-model = build_model()
+
+
+'''#TRAINING AND EVALUATING ON IMAGE GENERATOR
 model.fit_generator(train_dataset,
                             steps_per_epoch = 8000/batch_size,
-                            epochs = 25,
+                            epochs = 50,
                             validation_data = test_dataset,
                             validation_steps = 2000/batch_size,
                             workers = 32,
                             max_q_size = 16)
 
-model.fit_generator(test_dataset, steps_per_epoch = 2000, epochs = 1)
+print('Accuracy, loss:', model.evaluate_generator(test_dataset, steps = 2000))'''
+
+#GRIDSEARCH
+from data_processing import grid_search_helper
+images_list, labels_list = grid_search_helper(target_size = (64,64))
+
+from sklearn.model_selection import GridSearchCV
+from keras.wrappers.scikit_learn import KerasClassifier
+grid_search = KerasClassifier(build_fn = build_model)
+
+parameters = {
+        'batch_size': [25, 32, 50],
+        'epochs': [25, 50],
+        'optimizer': ['rmsprop', 'adam'],
+        'units': [25, 50, 75],
+        }
+
+grid_search = GridSearchCV(estimator = grid_search, param_grid = parameters, scoring = 'accuracy', cv = 10)
+print(images_list, labels_list)
+grid_search = grid_search.fit(images_list, labels_list)
+
+best_parameters = grid_search.best_params_
+best_accuracy = grid_search.best_score_
 
 #TESTING ON SINGLE IMAGE
 from keras.preprocessing import image
@@ -72,3 +98,4 @@ image_array = np.expand_dims(image_array, axis = 0)
 
 result = model.predict(image_array)
 class_index = train_dataset.class_indices
+print(result, class_index)
