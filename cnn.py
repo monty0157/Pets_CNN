@@ -2,12 +2,13 @@
 #IMPORT LIBRARIES
 import keras
 import numpy as np
+import pandas as pd
 
 #BUILD CNN
 from keras.models import Sequential
-from keras.layers import Convolution2D, MaxPooling2D, Flatten, Dense
+from keras.layers import Convolution2D, MaxPooling2D, Flatten, Dense, Dropout
 
-def build_model(optimizer = 'adam', units = 128, filters = 32, kernel_size = 3):
+def build_model(optimizer = 'adam', units = 128, filters = 32, kernel_size = 3, dropout_layers = 1):
     model = Sequential()
     model.add(Convolution2D(filters = filters,
                             kernel_size = kernel_size,
@@ -27,7 +28,12 @@ def build_model(optimizer = 'adam', units = 128, filters = 32, kernel_size = 3):
     model.add(Flatten())
 
     model.add(Dense(units = units, activation = 'relu'))
+    if(dropout_layers >= 1):
+        model.add(Dropout(rate = 0.2))
     model.add(Dense(units = units, activation = 'relu'))
+
+    if(dropout_layers >= 2):
+        model.add(Dropout(rate = 0.2))
     model.add(Dense(units = 1, activation = 'sigmoid'))
 
     model.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['accuracy'])
@@ -60,7 +66,7 @@ test_dataset = test_datagen.flow_from_directory('dataset/test_set',
 '''#TRAINING AND EVALUATING ON IMAGE GENERATOR
 model.fit_generator(train_dataset,
                             steps_per_epoch = 8000/batch_size,
-                            epochs = 50,
+                            epochs = 25,
                             validation_data = test_dataset,
                             validation_steps = 2000/batch_size,
                             workers = 32,
@@ -77,18 +83,20 @@ from keras.wrappers.scikit_learn import KerasClassifier
 grid_search = KerasClassifier(build_fn = build_model)
 
 parameters = {
-        'batch_size': [25, 32, 50],
-        'epochs': [25, 50],
-        'optimizer': ['rmsprop', 'adam'],
-        'units': [25, 50, 75],
-        }
+    'dropout_layers': [0, 1, 2],
+    'epochs': [25, 50],
+    'units': [75, 200],
+    'batch_size': [25, 32],
+}
 
-grid_search = GridSearchCV(estimator = grid_search, param_grid = parameters, scoring = 'accuracy', cv = 10)
-print(images_list, labels_list)
+grid_search = GridSearchCV(estimator = grid_search, param_grid = parameters, scoring = 'accuracy', cv = 3)
 grid_search = grid_search.fit(images_list, labels_list)
 
 best_parameters = grid_search.best_params_
 best_accuracy = grid_search.best_score_
+print('best_parameters:', best_parameters, 'Accuracy:', best_accuracy)
+parameters = grid_search.cv_results_
+print(parameters)
 
 #TESTING ON SINGLE IMAGE
 from keras.preprocessing import image
