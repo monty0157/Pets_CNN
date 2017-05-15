@@ -13,17 +13,19 @@ def grid_search_helper(target_size):
     images_list = []
     labels_list = []
     for file in cats_list_train:
-        img = image.load_img(cats_path_train + file, target_size = target_size)
-        img = np.asarray(img)
-        images_list.append(img)
+        if (file != '.DS_Store'):
+            img = image.load_img(cats_path_train + file, target_size = target_size)
+            img = np.asarray(img)
+            images_list.append(img)
 
         #ADD FILE NAME AS LABEL BY REMOVING INDEX AND FILE EXTENSION
         label = file.split(".")[0]
         labels_list.append(label)
     for file in dogs_list_train:
-        img = image.load_img(dogs_path_train + file, target_size = target_size)
-        img = np.asarray(img)
-        images_list.append(img)
+        if (file != '.DS_Store'):    
+            img = image.load_img(dogs_path_train + file, target_size = target_size)
+            img = np.asarray(img)
+            images_list.append(img)
 
         #ADD FILE NAME AS LABEL BY REMOVING INDEX AND FILE EXTENSION
         label = file.split(".")[0]
